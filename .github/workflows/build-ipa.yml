@@ -2,8 +2,8 @@ name: IPA derle
 
 # Depoda su dosyalar ana klasorde olmali:
 #   YZSohbet-proje.zip
-#   project.yml
 #   .github/workflows/build-ipa.yml (bu dosya)
+# project.yml de ana klasorde olabilir; yoksa veya bozuksa asagidaki adim dogrusunu yazar.
 
 on:
   workflow_dispatch:
@@ -30,25 +30,62 @@ jobs:
           fi
           echo "Aciliyor: ${zips[0]}"
           unzip -o -q "${zips[0]}"
-
-          # project.yml adi degismis veya baska klasore konmus olabilir: ara ve kopyala
-          if [ ! -f project.yml ]; then
-            alt=$(find . -maxdepth 3 -type f \( -iname 'project*.yml*' -o -iname 'project*.yaml*' \) -not -path './.git/*' | head -n 1)
-            if [ -n "$alt" ]; then
-              echo "project.yml yok, bulunan dosya kullaniliyor: $alt"
-              cp "$alt" project.yml
-            fi
-          fi
-
-          for f in project.yml build.gradle settings.gradle YZSohbet/Views.swift; do
+          for f in build.gradle settings.gradle YZSohbet/Views.swift; do
             if [ ! -f "$f" ]; then
-              echo "HATA: $f bulunamadi. project.yml dosyasini depoda ana klasore (YZSohbet-proje.zip ile ayni yere) yukle."
+              echo "HATA: $f bulunamadi. Zip dosyasini kontrol et."
               echo "Depodaki dosyalar:"
               ls -la
               exit 1
             fi
           done
-          echo "Tum dosyalar tamam."
+          echo "Zip tamam."
+
+      - name: XcodeGen kur
+        run: brew install xcodegen
+
+      - name: project.yml dogrula
+        run: |
+          if ! xcodegen dump --spec project.yml --type json > /dev/null 2>&1; then
+            echo "UYARI: project.yml yok, bos veya bozuk. Dosyanin ilk satirlari:"
+            head -n 15 project.yml || true
+            echo "---- Yerine dogru surum yaziliyor ----"
+            cat > project.yml <<'YML'
+          name: YZSohbet
+
+          options:
+            bundleIdPrefix: com.yzsohbet
+            createIntermediateGroups: true
+            deploymentTarget:
+              iOS: "16.0"
+
+          settings:
+            base:
+              SWIFT_VERSION: "5.0"
+              MARKETING_VERSION: "1.0"
+              CURRENT_PROJECT_VERSION: "1"
+
+          targets:
+            YZSohbet:
+              type: application
+              platform: iOS
+              deploymentTarget: "16.0"
+              sources:
+                - path: YZSohbet
+              settings:
+                base:
+                  PRODUCT_BUNDLE_IDENTIFIER: com.yzsohbet.app
+                  TARGETED_DEVICE_FAMILY: "1,2"
+                  GENERATE_INFOPLIST_FILE: YES
+                  INFOPLIST_KEY_CFBundleDisplayName: "YZ Sohbet"
+                  INFOPLIST_KEY_UILaunchScreen_Generation: YES
+                  INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+                  INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+                  INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+                  INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+          YML
+          fi
+          echo "project.yml hazir:"
+          head -n 5 project.yml
 
       - name: Java kur
         uses: actions/setup-java@v4
@@ -60,9 +97,6 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10'
-
-      - name: XcodeGen kur
-        run: brew install xcodegen
 
       - name: Xcode surumunu goster
         run: xcodebuild -version
