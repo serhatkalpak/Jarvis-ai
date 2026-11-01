@@ -504,25 +504,26 @@ struct SettingsRootView: View {
                         Label("Renk", systemImage: "paintpalette")
                         Spacer()
                         ForEach(accents, id: \.key) { a in
-                            let selected = (store.settings.accent ?? "turuncu") == a.key
-                            Button {
-                                Haptics.selection()
-                                store.settings.accent = a.key
-                            } label: {
-                                ZStack {
-                                    Circle()
-                                        .fill(accentColor(a.key))
-                                        .frame(width: 30, height: 30)
-                                    if selected {
-                                        Image(systemName: "checkmark")
-                                            .font(.caption.bold())
-                                            .foregroundColor(.white)
-                                    }
-                                }
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel(a.name)
-                        }
+    let tint: Color = accentColor(a.key)      // açık tip anotasyonu
+    let selected = (store.settings.accent ?? "turuncu") == a.key
+    Button {
+        Haptics.selection()
+        store.settings.accent = a.key
+    } label: {
+        ZStack {
+            Circle()
+                .fill(tint)                    // accentColor yerine tint
+                .frame(width: 30, height: 30)
+            if selected {
+                Image(systemName: "checkmark")
+                    .font(.caption.bold())
+                    .foregroundColor(.white)
+            }
+        }
+    }
+    .buttonStyle(.plain)
+    .accessibilityLabel(a.name)
+                                                    }
                     }
                 }
 
