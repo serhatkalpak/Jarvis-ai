@@ -1,6 +1,6 @@
 name: IPA derle
 
-# Depoda ÅŸunlar olmalÄ± (ana klasÃ¶rde):
+# Depoda su dosyalar ana klasorde olmali:
 #   YZSohbet-proje.zip
 #   project.yml
 #   .github/workflows/build-ipa.yml (bu dosya)
@@ -17,23 +17,38 @@ jobs:
       - name: Kodu al
         uses: actions/checkout@v4
 
-      - name: Zip dosyasÄ±nÄ± aÃ§
+      - name: Depodaki dosyalari goster
+        run: ls -la
+
+      - name: Zip dosyasini ac
         run: |
           shopt -s nullglob
           zips=(*.zip)
           if [ ${#zips[@]} -eq 0 ]; then
-            echo "HATA: Ana klasÃ¶rde .zip dosyasÄ± yok. YZSohbet-proje.zip dosyasÄ±nÄ± depoya yÃ¼kle."
+            echo "HATA: Ana klasorde .zip dosyasi yok. YZSohbet-proje.zip dosyasini depoya yukle."
             exit 1
           fi
-          echo "AÃ§Ä±lÄ±yor: ${zips[0]}"
+          echo "Aciliyor: ${zips[0]}"
           unzip -o -q "${zips[0]}"
+
+          # project.yml adi degismis veya baska klasore konmus olabilir: ara ve kopyala
+          if [ ! -f project.yml ]; then
+            alt=$(find . -maxdepth 3 -type f \( -iname 'project*.yml*' -o -iname 'project*.yaml*' \) -not -path './.git/*' | head -n 1)
+            if [ -n "$alt" ]; then
+              echo "project.yml yok, bulunan dosya kullaniliyor: $alt"
+              cp "$alt" project.yml
+            fi
+          fi
+
           for f in project.yml build.gradle settings.gradle YZSohbet/Views.swift; do
             if [ ! -f "$f" ]; then
-              echo "HATA: $f bulunamadÄ±. Zip'i ve project.yml dosyasÄ±nÄ± kontrol et."
+              echo "HATA: $f bulunamadi. project.yml dosyasini depoda ana klasore (YZSohbet-proje.zip ile ayni yere) yukle."
+              echo "Depodaki dosyalar:"
+              ls -la
               exit 1
             fi
           done
-          ls -la
+          echo "Tum dosyalar tamam."
 
       - name: Java kur
         uses: actions/setup-java@v4
@@ -49,13 +64,13 @@ jobs:
       - name: XcodeGen kur
         run: brew install xcodegen
 
-      - name: Xcode sÃ¼rÃ¼mÃ¼nÃ¼ gÃ¶ster
+      - name: Xcode surumunu goster
         run: xcodebuild -version
 
       - name: IPA derle
         run: gradle buildIpa --console=plain
 
-      - name: IPA dosyasÄ±nÄ± yÃ¼kle
+      - name: IPA dosyasini yukle
         uses: actions/upload-artifact@v4
         with:
           name: YZSohbet-ipa
