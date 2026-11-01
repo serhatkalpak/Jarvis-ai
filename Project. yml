@@ -1,0 +1,32 @@
+isim: YZSohbet
+
+seçenekler:
+  bundleIdPrefix: com.yzsohbet
+  Ara Gruplar oluştur: doğru
+  dağıtım hedefi:
+    iOS: "16.0"
+
+Ayarlar:
+  temel:
+    SWIFT_VERSION: "5.0"
+    PAZARLAMA_VERSİYONU: "1.0"
+    MEVCUT PROJE SÜRÜMÜ: "1"
+
+Hedefler:
+  YZSohbet:
+    tür: uygulama
+    platform: iOS
+    dağıtım hedefi: "16.0"
+    Kaynaklar:
+      - yol: YZSohbet
+    Ayarlar:
+      temel:
+        PRODUCT_BUNDLE_IDENTIFIER: com.yzsohbet.app
+        HEDEFLENEN_CİHAZ_AİLESİ: "1,2"
+        BİLGİ LİSTESİ DOSYASINI OLUŞTUR: EVET
+        INFOPLIST_KEY_CFBundleDisplayName: "YZ Sohbet"
+        INFOPLIST_KEY_UILaunchScreen_Generation: YET
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YET
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YET
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
