@@ -1,1 +1,63 @@
-.
+name: IPA derle
+
+# Depoda ÅŸunlar olmalÄ± (ana klasÃ¶rde):
+#   YZSohbet-proje.zip
+#   project.yml
+#   .github/workflows/build-ipa.yml (bu dosya)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Kodu al
+        uses: actions/checkout@v4
+
+      - name: Zip dosyasÄ±nÄ± aÃ§
+        run: |
+          shopt -s nullglob
+          zips=(*.zip)
+          if [ ${#zips[@]} -eq 0 ]; then
+            echo "HATA: Ana klasÃ¶rde .zip dosyasÄ± yok. YZSohbet-proje.zip dosyasÄ±nÄ± depoya yÃ¼kle."
+            exit 1
+          fi
+          echo "AÃ§Ä±lÄ±yor: ${zips[0]}"
+          unzip -o -q "${zips[0]}"
+          for f in project.yml build.gradle settings.gradle YZSohbet/Views.swift; do
+            if [ ! -f "$f" ]; then
+              echo "HATA: $f bulunamadÄ±. Zip'i ve project.yml dosyasÄ±nÄ± kontrol et."
+              exit 1
+            fi
+          done
+          ls -la
+
+      - name: Java kur
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Gradle kur
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10'
+
+      - name: XcodeGen kur
+        run: brew install xcodegen
+
+      - name: Xcode sÃ¼rÃ¼mÃ¼nÃ¼ gÃ¶ster
+        run: xcodebuild -version
+
+      - name: IPA derle
+        run: gradle buildIpa --console=plain
+
+      - name: IPA dosyasÄ±nÄ± yÃ¼kle
+        uses: actions/upload-artifact@v4
+        with:
+          name: YZSohbet-ipa
+          path: build/ipa/YZSohbet.ipa
+          if-no-files-found: error
